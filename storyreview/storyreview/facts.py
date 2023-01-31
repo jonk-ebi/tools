@@ -124,9 +124,9 @@ def sprint_issue_count_at_end_of_sprint(issue, issue_details, event, change, spr
 def shrink_issue_number_of_sprints(issue_facts, sprint_facts): 
     for issue, facts in issue_facts.items(): 
         target = issue_number_of_sprints.__name__
-        list_of_sprints = {sprint for event in facts[target] for sprint in event}
+        list_of_sprints = {sprint.strip() for event in facts[target] for sprint in event if len(sprint) > 0}
         if len(list_of_sprints) > 0: 
-            print(issue,list_of_sprints)
+            #print(issue,list_of_sprints)
             facts[target] = len(list_of_sprints)
         else: 
             facts[target] = 1 # if an issue is assigned a sprint on creation it is not included in it's history
@@ -139,6 +139,15 @@ def shrink_issue_life_span(issue_facts, sprint_facts):
             facts[target] = facts[target][0]
         else: 
             facts[target] = -1
+            
+@is_post_process_fact 
+def clean_issue_end_status(issue_facts, sprint_facts): 
+    for issue, facts in issue_facts.items(): 
+        target = issue_end_status.__name__
+        if len(facts[target]) > 0: 
+            facts[target] = facts[target][0]
+        else: 
+            facts[target] = ""
 
 def get_issue_facts(issues, sprint):
     issue_facts = {}
@@ -153,7 +162,6 @@ def get_issue_facts(issues, sprint):
               
         for name, sprint_fact in SPRINT_FACTS.items(): 
             if name not in sprint_facts:
-                print(name)
                 sprint_facts[name] = 0
             for event in details["events"]:
                 for change in event["changes"]: 

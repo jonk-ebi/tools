@@ -54,35 +54,40 @@ def get_issue_history(issue):
     issue_summary['events'] = events;
     return issue_summary
 
-def get_sprint_details(url, token, board): 
+def get_sprints(url, token, board, offset=0): 
     jira = JIRA(
         server=url,
         token_auth=token
     )
-    
-    #project = jira.project(cli.project)
-    #print(f"Connected to {project.name}")
+    sprints = []
 
-    # TODO need to add paging here
-    sprints = jira.sprints(
-        board_id = int(board),
-        startAt = 51,
-        maxResults = 50
-    ) # Look at how to order
+    while True:
+        new_sprints = jira.sprints(
+                board_id = int(board),
+                startAt = offset,
+                maxResults = 50
+            )
+        if len(new_sprints) == 0:
+            break
+        
+        offset += len(new_sprints)
+        sprints.extend(new_sprints)
+    return sprints
     
-    print(f"Latest sprint is {sprints[-1].name} with status {sprints[-1].state}")
-    
-    #for sprint in sprints:
-    #    print(sprint.name)
-    print(f"Sprints found:{len(sprints)}")
-    target = -3
-    print(f"Target sprint {sprints[target].name}")
-    print(f"From {sprints[target].startDate} to {sprints[target].endDate}")
-    issues = jira.search_issues(f"sprint={sprints[target].id}")
+
+def get_sprint_details(url, token, sprint): 
+    jira = JIRA(
+        server=url,
+        token_auth=token
+    )
+
+    print(f"Target sprint {sprint.name}")
+    print(f"From {sprint.startDate} to {sprint.endDate}")
+    issues = jira.search_issues(f"sprint={sprint.id}")
     
     #Gather issue details <- this needs to move to a function so it can be used on all sprints
     issue_details = {}
     for issue_holder in issues:
         issue = jira.issue(issue_holder.id, expand='changelog')
         issue_details[issue.key] = get_issue_history(issue)
-    return issue_details, sprints[target]
+    return issue_details
