@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from statistics import median, mode, mean
 
 # What do I really want to know? 
      # - PI How long do issues normally last - V, including, excluding cancelled - done
@@ -30,6 +31,7 @@ DONE_STATE = FINISHED_STATUSES[0]
 ISSUE_FACTS = {} # Holds dictionary of issue fact functions, populated by is_fact
 SPRINT_FACTS = {} 
 POST_PROCESS_FACTS = {}
+ISSUE_AVERAGE_FACTS = {}
 
 PADDING_DELTA = timedelta(hours = 23)
 
@@ -43,6 +45,10 @@ def is_sprint_fact(fact):
 
 def is_post_process_fact(fact): 
     POST_PROCESS_FACTS[fact.__name__] = fact
+    return fact
+
+def is_issue_average_fact(fact): 
+    ISSUE_AVERAGE_FACTS[fact.__name__] = fact
     return fact
           
 def clean_sprint_datetime(sprint_date): 
@@ -148,6 +154,18 @@ def clean_issue_end_status(issue_facts, sprint_facts):
             facts[target] = facts[target][0]
         else: 
             facts[target] = ""
+            
+@is_issue_average_fact
+def average_issue_life(issues): 
+    closed_issues = [
+        issue[issue_life_span.__name__] for issue in issues
+        if issue[issue_life_span.__name__] > -1
+        ]
+    averages = {
+        "median":median(issue_life),
+        "mode":mode(issue_life),
+        "mean":mean(issue_life)
+    }
 
 def get_issue_facts(issues, sprint):
     issue_facts = {}
@@ -183,3 +201,20 @@ def get_issue_facts(issues, sprint):
 
 def get_facts(issues, sprint):    
     return get_issue_facts(issues, sprint)
+    
+def get_issue_averages(sprints): 
+    average_facts = {}
+    # build unique issue set 
+    unique_issue_names = (
+        issue for sprint in sprints.values() 
+        for issue in sprints["issues"]
+    )
+    
+    #!!!!!
+    unique_issues = [
+    ]
+    # pass issues to fact
+    for name, fact in ISSUE_AVERAGE_FACTS.items(): 
+        average_facts[name] = fact(unique_issues)
+    
+    return average_facts

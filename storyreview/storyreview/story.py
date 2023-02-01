@@ -4,7 +4,7 @@ import json
 from argparse import ArgumentParser
 
 from storyreview.jira import get_sprints, get_sprint_details
-from storyreview.facts import get_facts
+from storyreview.facts import get_facts, get_issue_averages
 
 # poetry run python -m storyreview -t  -b 332
 # need to add config for jira URL?
@@ -61,11 +61,8 @@ def story(args):
                 "sprint":sprint_facts
             }
     
-
-    #issue_details, sprint = get_sprint_details(cli.host, cli.token, cli.board)
-    #sprint_facts, issue_facts = get_facts(issue_details, sprint) 
-    #print(issue_facts)
-        
+    facts['issue_averages'] = get_issue_averages(facts)
+      
     # output json
     with open("beta_sprints.json","w") as report:
         report.write(json.dumps(facts, indent=4))
