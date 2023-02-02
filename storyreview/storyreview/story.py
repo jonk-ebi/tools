@@ -4,9 +4,8 @@ import json
 from argparse import ArgumentParser
 
 from storyreview.jira import get_sprints, get_sprint_details
-from storyreview.facts import get_facts, get_issue_averages
+from storyreview.facts import get_facts, get_issue_totals
 
-# poetry run python -m storyreview -t  -b 332
 # need to add config for jira URL?
 
 JIRA_URL = "https://www.ebi.ac.uk/panda/jira"
@@ -26,6 +25,12 @@ def getCLICommands():
         "-t",
         "--token",
         help = "API token"
+    )
+    
+    parser.add_argument(
+        "-o",
+        "--output",
+        help="Name of file to output results"
     )
     
     parser.add_argument(
@@ -52,7 +57,7 @@ def story(args):
     
     # compile facts
     facts = {}
-    for sprint in sprints[-4:]:
+    for sprint in sprints:
         if sprint.state != "future":
             issue_details = get_sprint_details(cli.host, cli.token, sprint)
             sprint_facts, issue_facts = get_facts(issue_details, sprint) 
@@ -61,10 +66,15 @@ def story(args):
                 "sprint":sprint_facts
             }
     
-    facts['issue_averages'] = get_issue_averages(facts)
+    facts['issue_totals'] = get_issue_totals(facts)
       
     # output json
-    with open("beta_sprints.json","w") as report:
+    file = cli.output
+    if len(file) == 0:
+        file = "jira_sprint_report.json"
+    if not file.endswith(".json"): 
+        file = f"{file}.json"
+    with open(file,"w") as report:
         report.write(json.dumps(facts, indent=4))
     
         

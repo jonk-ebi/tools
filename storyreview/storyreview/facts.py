@@ -31,7 +31,7 @@ DONE_STATE = FINISHED_STATUSES[0]
 ISSUE_FACTS = {} # Holds dictionary of issue fact functions, populated by is_fact
 SPRINT_FACTS = {} 
 POST_PROCESS_FACTS = {}
-ISSUE_AVERAGE_FACTS = {}
+ISSUE_TOTALS = {}
 
 PADDING_DELTA = timedelta(hours = 23)
 
@@ -47,8 +47,8 @@ def is_post_process_fact(fact):
     POST_PROCESS_FACTS[fact.__name__] = fact
     return fact
 
-def is_issue_average_fact(fact): 
-    ISSUE_AVERAGE_FACTS[fact.__name__] = fact
+def is_issue_total(fact): 
+    ISSUE_TOTALS[fact.__name__] = fact
     return fact
           
 def clean_sprint_datetime(sprint_date): 
@@ -155,17 +155,33 @@ def clean_issue_end_status(issue_facts, sprint_facts):
         else: 
             facts[target] = ""
             
-@is_issue_average_fact
-def average_issue_life(issues): 
-    closed_issues = [
+@is_issue_total
+def total_average_issue_life(issues): 
+    done_issues = [
         issue[issue_life_span.__name__] for issue in issues
-        if issue[issue_life_span.__name__] > -1
+        if issue[issue_end_status.__name__] == DONE_STATE
         ]
-    averages = {
-        "median":median(issue_life),
-        "mode":mode(issue_life),
-        "mean":mean(issue_life)
+    return {
+        "median":median(done_issues),
+        "mode":mode(done_issues),
+        "mean":mean(done_issues)
     }
+
+@is_issue_total
+def total_issue_counts(issues): 
+    issue_states = {}
+    issue_states['total'] = len(issues)
+    issue_states['open'] = 0
+    
+    for issue in issues:
+        if issue[issue_life_span.__name__] < 0:
+            issue_states['open'] += 1
+        else:
+            state = issue[issue_end_status.__name__]
+            if state not in issue_states:
+                issue_states[state] = 0
+            issue_states[state] += 1
+    return issue_states
 
 def get_issue_facts(issues, sprint):
     issue_facts = {}
@@ -202,19 +218,21 @@ def get_issue_facts(issues, sprint):
 def get_facts(issues, sprint):    
     return get_issue_facts(issues, sprint)
     
-def get_issue_averages(sprints): 
-    average_facts = {}
-    # build unique issue set 
-    unique_issue_names = (
-        issue for sprint in sprints.values() 
-        for issue in sprints["issues"]
-    )
+def get_issue_totals(sprints): 
+    issue_totals = {}
+    # build unique issue set - there must be a better way of doing this!
+    all_issues = {
+        issue_name:issue_details for sprint_name, sprint_details in sprints.items() 
+        for issue_name, issue_details in sprint_details["issues"].items()
+    }
+    unique_issue_names = (name for name, details in all_issues.items())
     
-    #!!!!!
     unique_issues = [
+        all_issues[name] for name in unique_issue_names
     ]
-    # pass issues to fact
-    for name, fact in ISSUE_AVERAGE_FACTS.items(): 
-        average_facts[name] = fact(unique_issues)
     
-    return average_facts
+    # pass issues to fact
+    for name, fact in ISSUE_TOTALS.items(): 
+        issue_totals[name] = fact(unique_issues)
+    
+    return issue_totals
