@@ -56,15 +56,25 @@ def story(args):
     #    print(sprint.name)
     
     # compile facts
-    facts = {}
-    for sprint in sprints:
+    facts = {} 
+    first_issue_test = False
+    for sprint in sprints[-4:]:
         if sprint.state != "future":
-            issue_details = get_sprint_details(cli.host, cli.token, sprint)
-            sprint_facts, issue_facts = get_facts(issue_details, sprint) 
+            issue_details, issue_snapshots = get_sprint_details(cli.host, cli.token, sprint)
+            sprint_facts, issue_facts = get_facts(issue_snapshots, sprint) 
             facts[sprint.name] = {
                 "issues":issue_facts,
                 "sprint":sprint_facts
             }
+            
+            #if first_issue_test == False:
+            #    first_issue_test = True 
+            #    issue_id = list(issue_details.keys())[-10]
+            #    print("-" * 20)
+            #    print(f"Sprint start {sprint.startDate} end {sprint.endDate}")
+            #    print(issue_details[issue_id])
+            #    print(issue_snapshots[issue_id])
+            #    print("-" * 20)
     
     facts['issue_totals'] = get_issue_totals(facts)
       

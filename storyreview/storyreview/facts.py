@@ -11,6 +11,12 @@ from statistics import median, mode, mean
      # - Ag How many issues remain in a sprint  - done
      # - Comments per issue / sprint - later 
      # - deep dive, average time in each status - later
+     
+     # For 2023-01 
+     # "sprint_total_issues_count": 17, <- off by one 
+     #  "sprint_issues_added_after_count": 10, <- off by 7 
+     # "sprint_starting_issue_count": 13, <- correct 
+     # "sprint_issues_done": 8 <- correct
 #----
     # times from history.created
     # record item.field sprint -> records changing sprint - item toString fromString
@@ -27,10 +33,10 @@ FINISHED_STATUSES = ["done", "closed", "resolved", "cancelled", "unresolved"]
 
 CANCELLED_STATE = FINISHED_STATUSES[-1]
 DONE_STATE = FINISHED_STATUSES[0]
+IGNORE_STATES = FINISHED_STATUSES[1:]
 
 ISSUE_FACTS = {} # Holds dictionary of issue fact functions, populated by is_fact
 SPRINT_FACTS = {} 
-POST_PROCESS_FACTS = {}
 ISSUE_TOTALS = {}
 
 PADDING_DELTA = timedelta(hours = 23)
@@ -43,124 +49,90 @@ def is_sprint_fact(fact):
     SPRINT_FACTS[fact.__name__] = fact
     return fact
 
-def is_post_process_fact(fact): 
-    POST_PROCESS_FACTS[fact.__name__] = fact
-    return fact
-
 def is_issue_total(fact): 
     ISSUE_TOTALS[fact.__name__] = fact
     return fact
           
 def clean_sprint_datetime(sprint_date): 
-    return datetime.fromisoformat(sprint_date[:sprint_date.rfind(".")])
+    return datetime.fromisoformat(sprint_date[:sprint_date.rfind(".")]) # I should handle this better
           
 @is_issue_fact
-def issue_life_span(issue, issue_details, event, change): 
-    if change["field"] == "status" and change["toString"].lower() in FINISHED_STATUSES:
-        #Calculate delta
-        created_date = datetime.fromisoformat(issue_details['created'])
-        closed_date = datetime.fromisoformat(event['occured'])
-        #print(f"Issue {issue} life span {closed_date - created_date}")
-        return (closed_date - created_date).days
+def issue_life_span(issue, issue_details): 
+    if issue_details['status']['value'].lower() in FINISHED_STATUSES:
+        created_date = datetime.fromisoformat(issue_details['common']['created'])
+        closed_date = datetime.fromisoformat(issue_details['status']['occured'])
+        gap = (closed_date - created_date).days
+        if gap == 0: 
+            gap += 1
+        return gap
     return None
 
 @is_issue_fact
-def issue_end_status(issue, issue_details, event, change): 
-    if change["field"] == "status" and change["toString"].lower() in FINISHED_STATUSES:
-        return change["toString"].lower()
+def issue_end_status(issue, issue_details): 
+    if issue_details['status']["value"].lower() in FINISHED_STATUSES:
+        return issue_details['status']['value'].lower()
     return None
     
 @is_issue_fact
-def issue_number_of_sprints(issue, issue_details, event, change): 
-    if change["field"].lower() == "sprint": 
-        return change["toString"].split(',')
-    return None
+def issue_number_of_sprints(issue, issue_details): 
+    return issue_details['sprint']['value'].split(',')
 
 @is_sprint_fact
-def sprint_issues_cancelled(issue, issue_details, event, change, sprint_start, sprint_end, sprint):
-    if change["field"] == "status" and change["toString"].lower() == CANCELLED_STATE: 
-        cancelled_date = datetime.fromisoformat(event['occured'])
-        if cancelled_date >= sprint_start: 
-            return 1
+def sprint_issues_cancelled(issue, issue_details, sprint_start, sprint_end, sprint):
+    if issue_details['status']['value'].lower() == CANCELLED_STATE: 
+        cancelled_date = datetime.fromisoformat(issue_details['status']['occured'])
+        return 1
     return 0
-
+  
 @is_sprint_fact
-def sprint_starting_issue_count(issue, issue_details, event, change, sprint_start, sprint_end, sprint):
-    if change["field"].lower() == "sprint" and sprint.name in change["toString"]:
-        add_to_sprint_date = datetime.fromisoformat(event['occured'])
-        #print(f"Added to sprint {add_to_sprint_date - sprint_start}")
-        delta = add_to_sprint_date - sprint_start
-        if delta <= PADDING_DELTA: 
-            return 1
-    return 0
+def sprint_total_issues_count(issue, issue_details, sprint_start, sprint_end, sprint):
+    if issue_details["status"]["value"] in IGNORE_STATES:
+        return 0
+    return 1
     
 @is_sprint_fact
-def sprint_total_issues_count(issue, issue_details, event, change, sprint_start, sprint_end, sprint):
-    if change["field"].lower() == "sprint" and sprint.name in change["toString"]:
+def sprint_starting_issue_count(issue, issue_details, sprint_start, sprint_end, sprint): 
+    
+    if issue_details["status"]["value"] in IGNORE_STATES:
+        return 0
+           
+    add_to_sprint_date = datetime.fromisoformat(issue_details["sprint"]['occured'])
+    if sprint_start <= add_to_sprint_date: 
         return 1
     return 0
     
 @is_sprint_fact
-def sprint_issues_added_after_count(issue, issue_details, event, change, sprint_start, sprint_end, sprint):
-    if change["field"].lower() == "sprint" and sprint.name in change["toString"]:
-        add_to_sprint_date = datetime.fromisoformat(event['occured'])
-        #print(f"Added to sprint {add_to_sprint_date - sprint_start}")
-        delta = add_to_sprint_date - sprint_start
-        if delta > PADDING_DELTA: 
-            return 1
-    return 0
+def sprint_issues_added_after_count(issue, issue_details, sprint_start, sprint_end, sprint):
+    if issue_details["status"]["value"] in IGNORE_STATES:
+        return 0
+        
+    add_to_sprint_date = datetime.fromisoformat(issue_details['sprint']['occured'])
+    if sprint_start <= add_to_sprint_date: 
+        return 0
+    return 1
 
 @is_sprint_fact
-def sprint_issue_count_at_end_of_sprint(issue, issue_details, event, change, sprint_start, sprint_end, sprint):
-    if change["field"].lower() == "sprint" and sprint.name in change["toString"]:
-        # check if done
-        if issue_details["status"] in FINISHED_STATUSES:
-            return 1
-        else: 
-            for other_event in issue_details["events"]:
-                for other_change in other_event["changes"]:
-                    if other_change["field"] == "status" and change["toString"].lower() in FINISHED_STATUSES:
-                        date_issue_was_done = datetime.fromisoformat(other_change['occured'])
-                        if date_issue_was_done > sprint_end: 
-                            return 1
-                        
+def sprint_issues_done(issue,issue_details, sprint_start, sprint_end, sprint):
+    if issue_details["status"]["value"] == DONE_STATE: 
+        #print(issue)
+        #print(issue_details["status"])
+        #print('%' * 30)
+        return 1
     return 0
-
-@is_post_process_fact
-def shrink_issue_number_of_sprints(issue_facts, sprint_facts): 
-    for issue, facts in issue_facts.items(): 
-        target = issue_number_of_sprints.__name__
-        list_of_sprints = {sprint.strip() for event in facts[target] for sprint in event if len(sprint) > 0}
-        if len(list_of_sprints) > 0: 
-            #print(issue,list_of_sprints)
-            facts[target] = len(list_of_sprints)
-        else: 
-            facts[target] = 1 # if an issue is assigned a sprint on creation it is not included in it's history
-
-@is_post_process_fact 
-def shrink_issue_life_span(issue_facts, sprint_facts): 
-    for issue, facts in issue_facts.items(): 
-        target = issue_life_span.__name__
-        if len(facts[target]) > 0: 
-            facts[target] = facts[target][0]
-        else: 
-            facts[target] = -1
-            
-@is_post_process_fact 
-def clean_issue_end_status(issue_facts, sprint_facts): 
-    for issue, facts in issue_facts.items(): 
-        target = issue_end_status.__name__
-        if len(facts[target]) > 0: 
-            facts[target] = facts[target][0]
-        else: 
-            facts[target] = ""
-            
+               
 @is_issue_total
 def total_average_issue_life(issues): 
     done_issues = [
         issue[issue_life_span.__name__] for issue in issues
-        if issue[issue_end_status.__name__] == DONE_STATE
+        if issue_end_status.__name__ in issue and issue[issue_end_status.__name__] == DONE_STATE
         ]
+    if len(done_issues) == 0:
+        return {
+             "median":0,
+            "mode":0,
+            "mean":0
+        }
+    
     return {
         "median":median(done_issues),
         "mode":mode(done_issues),
@@ -174,19 +146,19 @@ def total_issue_counts(issues):
     issue_states['open'] = 0
     
     for issue in issues:
-        if issue[issue_life_span.__name__] < 0:
-            issue_states['open'] += 1
-        else:
+        if issue_life_span.__name__ in issue:
             state = issue[issue_end_status.__name__]
             if state not in issue_states:
                 issue_states[state] = 0
             issue_states[state] += 1
+        else:
+            issue_states['open'] += 1
     return issue_states
 
 def get_issue_facts(issues, sprint):
     issue_facts = {}
     sprint_facts = {}
-    #HACK: this is really ugly
+
     sprint_start = clean_sprint_datetime(sprint.startDate)
     sprint_end = clean_sprint_datetime(sprint.endDate)
     
@@ -197,21 +169,15 @@ def get_issue_facts(issues, sprint):
         for name, sprint_fact in SPRINT_FACTS.items(): 
             if name not in sprint_facts:
                 sprint_facts[name] = 0
-            for event in details["events"]:
-                for change in event["changes"]: 
-                    sprint_facts[name] += sprint_fact(issue, details, event, change, sprint_start, sprint_end, sprint)
+            
+            result = sprint_fact(issue, details, sprint_start, sprint_end, sprint)
+            sprint_facts[name] += result
             
         for name, issue_fact in ISSUE_FACTS.items():
-            if name not in issue_facts[issue]: 
-                issue_facts[issue][name] = []
-            for event in details["events"]:
-                for change in event["changes"]: 
-                    fact_results = issue_fact(issue, details, event, change)
-                    if fact_results is not None: 
-                        issue_facts[issue][name].append(fact_results)  
-                          
-    for name, process_fact in POST_PROCESS_FACTS.items():
-        process_fact(issue_facts, sprint_facts)         
+            fact_results = issue_fact(issue, details)
+            if fact_results is not None: 
+                issue_facts[issue][name] = fact_results
+                                
     return sprint_facts, issue_facts
 
 
