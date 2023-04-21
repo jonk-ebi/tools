@@ -25,18 +25,21 @@ JIRA_URL = "https://www.ebi.ac.uk/panda/jira"
 
 def getCLICommands(): 
     parser = ArgumentParser(
-        description="Story Review - gathers metrics for stories linked to sprints within a Jira project"
+        description="Personal Issues - gathers metrics on JIRA tickets assigned to one or more users",
+        usage="python -m personalissues -t TOKEN -p imran andrey jyo jon -o frontend.json -l ENSWEB --summary true"
     )
      
     parser.add_argument(
         "-t",
         "--token",
+        required=True,
         help = "API token"
     )
     
     parser.add_argument(
         "-o",
         "--output",
+        default="personal_issues.json",
         required=True,
         help="Name of file to output results (JSON)"
     )

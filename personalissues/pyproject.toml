@@ -2,7 +2,7 @@
 name = "personalissues"
 version = "0.1.0"
 description = ""
-authors = ["Jon Keatley jon@ebi.ac.uk"]
+authors = ["Jon Keatley <jon@ebi.ac.uk>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
