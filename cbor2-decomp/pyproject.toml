@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "cbor2-decomp"
+version = "0.1.0"
+description = "A set of tools for viewing CBOR2 encoded files and HTTP requests"
+authors = ["Jon Keatley <jon@ebi.ac.uk>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "cbor2_decomp"}]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+cbor2 = "^5.4.6"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
