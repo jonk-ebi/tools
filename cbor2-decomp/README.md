@@ -22,4 +22,4 @@ A set of tools for viewing CBOR2 encoded files and HTTP requests
 
 - Tools are very bare bones and make a bunch of assumptions.
 - All tools convert binary strings into a string of base 10 bytes e.g. `128, 26, 255, 0`
-- **har-cbor2-decomp.py** currently filters har entries request urls by `api/browser/data`
+- **har-cbor2-decomp.py** currently filters har entry request urls by `api/browser/data`
