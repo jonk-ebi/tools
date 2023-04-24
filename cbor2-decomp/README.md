@@ -14,7 +14,7 @@ A set of tools for viewing CBOR2 encoded files and HTTP requests
 ## Install
 
 1. git clone
-2. cd personalissues
+2. cd cbor2-decomp
 3. poetry install
 4. poetry run python cbor2-decomp.py **or** poetry run python har-cbor2-decomp.py
 
