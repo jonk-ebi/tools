@@ -2,14 +2,14 @@
 
 A set of tools for viewing CBOR2 encoded files and HTTP requests
 
-**cbor2-decomp.py**: Takes in a CBOR2 encoded file and outputs JSON - can be used to decompile EARDO files
-**Usage**: `python cbor2-decomp.py [FILE PATH] [OUTPUT FILE PATH]`
-**Example**: `poetry run python cbor2-decomp.py render16.eardo render16.json`
+**cbor2-decomp.py**: Takes in a CBOR2 encoded file and outputs JSON - can be used to decompile EARDO files  
+**Usage**: `python cbor2-decomp.py [FILE PATH] [OUTPUT FILE PATH]`  
+**Example**: `poetry run python cbor2-decomp.py render16.eardo render16.json`  
 
-**-har-cbor2-decomp.py**: Given a har file returns a json object containing any genome browser backend requests with CBOR2 values converted to JSON
-**Usage**: `python har-cbor2-decomp.py [FILE PATH] [OUTPUT FILE PATH]`
-**Example**: `poetry run python har-cbor2-decomp.py gb_usage.har gb_usage.json`
-**Notes**: You can get a har file via your browser developer tools 
+**-har-cbor2-decomp.py**: Given a har file returns a json object containing any genome browser backend requests with CBOR2 values converted to JSON  
+**Usage**: `python har-cbor2-decomp.py [FILE PATH] [OUTPUT FILE PATH]`  
+**Example**: `poetry run python har-cbor2-decomp.py gb_usage.har gb_usage.json`  
+**Notes**: You can get a har file via your browser developer tools   
 
 ## Install
 
