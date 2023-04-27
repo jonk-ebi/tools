@@ -20,7 +20,15 @@ def get_jira_connection(url, token):
 def get_issue_comment(jira, issue, id): 
     return jira.comment(issue,id)
 
-"""project = ENSWEB AND assignee  is EMPTY  AND status not in (Done, Closed, Resolved, Cancelled) order by updated DESC"""
+def get_unassigned_issues(jira, projects): 
+    issues = {}
+
+    for project in projects:
+        query = f"project = {project} AND assignee  is EMPTY  AND status not in (Done, Closed, Resolved, Cancelled) order by updated DESC"
+        print(f"Query: {query}")
+        issues[project] = jira.search_issues(query)
+
+    return issues
 
 def get_issues_for_person(jira, people): 
 

@@ -6,7 +6,7 @@ import math
 from datetime import datetime, timedelta
 from argparse import ArgumentParser
 
-from personalissues.jira import get_issues_for_person, get_issue_comment, get_jira_connection
+from personalissues.jira import get_issues_for_person, get_issue_comment, get_jira_connection, get_unassigned_issues
 
 # What do we want? 
 # - Track peoples progress at a set time each week
@@ -98,13 +98,7 @@ def get_last_comment(jira_conn, issue, comments):
 def generate_summary(file, flattened_issues):
     people = {}
     last_run = {}
-    dif_suffix = "_difference"
-    dif_format = "{}" + dif_suffix
-    
-    if os.path.exists(file):
-        with open(file) as old_summary:
-            last_run = json.load(old_summary)
-    
+
     for issue in flattened_issues: 
         status = issue['status']
         if ' ' in status:
@@ -113,22 +107,24 @@ def generate_summary(file, flattened_issues):
         if issue['person'] not in people:
            print(f"Found {issue['person']}")
            people[issue['person']] = {
-               'total':0,
-               dif_format.format('total'):0,
-               'sum_life_times':0,
-               'avg_life_times':0
+               'issues':{
+                   'total':0
+               },
+               'stats':{
+                    'sum_life_times':0,
+                    'avg_life_times':0
+               }
            } 
         
-        people[issue['person']]['total'] += 1
-        people[issue['person']]['sum_life_times'] += issue['life']
+        people[issue['person']]['issues']['total'] += 1
+        people[issue['person']]['stats']['sum_life_times'] += issue['life']
         
-        if status not in people[issue['person']]:
-            people[issue['person']][status] = 0
-            people[issue['person']][dif_format.format(status)] = 0
-        
-        people[issue['person']][status] += 1
+        if status not in people[issue['person']]['issues']:
+            people[issue['person']]['issues'][status] = 0
+
+        people[issue['person']]['issues'][status] += 1
     
-    #average issue life and differences
+    #average issue life
     for person, counts in people.items():
         if person in last_run:
             dif_keys = [key for key in counts.keys() if key.endswith(dif_suffix)]
@@ -137,11 +133,29 @@ def generate_summary(file, flattened_issues):
                 target = key[:len(key) - len(dif_suffix)]
                 counts[key] = counts[target] - last_run[person][target]
         
-        people[person]['avg_life_times'] = math.floor(people[person]['sum_life_times'] / people[person]['total'])
+        people[person]['stats']['avg_life_times'] = math.floor(
+            people[person]['stats']['sum_life_times'] / people[person]['issues']['total'])
     
     with open(file,"w") as report:
         report.write(json.dumps(people, indent=4))
     
+def _flatten_issue(issue, owner, jira_conn):
+    return {
+        'person':owner, 
+        'issue':issue.key,
+        'project':str(issue.fields.project),
+        'summary':issue.fields.summary,
+        'last_comment': get_last_comment(
+                            jira_conn, 
+                            issue.key, 
+                            issue.fields.comment.comments
+                        ),
+        'status':str(issue.fields.status),
+        'created':chop_iso_datetime(str(issue.fields.created)),
+        'updated':chop_iso_datetime(str(issue.fields.updated)),
+        'life': get_life_time_for_issue(issue.fields.created),
+    }
+
 def personal_issues(host, token, people, limit, output, summary): 
     print("Personal issues")
     print(f"Connecting to {host}")
@@ -159,28 +173,15 @@ def personal_issues(host, token, people, limit, output, summary):
     flattened = []
     for person,issue_list in issues.items():
         
-        flattened_issues = [
-            {
-                'person':person, 
-                'issue':issue.key,
-                'project':str(issue.fields.project),
-                'summary':issue.fields.summary,
-                'last_comment': get_last_comment(
-                                    jira_conn, 
-                                    issue.key, 
-                                    issue.fields.comment.comments
-                                ),
-                'status':str(issue.fields.status),
-                'created':chop_iso_datetime(str(issue.fields.created)),
-                'updated':chop_iso_datetime(str(issue.fields.updated)),
-                'life': get_life_time_for_issue(issue.fields.created),
-                
-            } for issue in issue_list
-        ]
+        flattened_issues = [_flatten_issue(issue, person, jira_conn) for issue in issue_list]
         flattened.extend(flattened_issues)
     
     if limit:
-        flattened = [issue for issue in flattened if limit in issue['issue']]
+        print(f"Getting unassigned and filtering by project {limit}")
+        issues = get_unassigned_issues(jira_conn, [limit])
+        flattened_issues = [_flatten_issue(issue,'unassigned', jira_conn) for issue in issues[limit]] #Hardcoded to take one project for now
+        flattened.extend(flattened_issues)
+        flattened = [issue for issue in flattened if limit == issue['project']]
         
     if summary:
         generate_summary(f"{output}_summary.json", flattened)
