@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "streamlit-dash"
+version = "0.1.0"
+description = "A stramlit dashboard for Ensembl work"
+authors = ["Jon Keatley <jon@ebi.ac.uk>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "streamlit_dash"}]
+
+[tool.poetry.dependencies]
+python = "^3.8, !=3.9.7"
+streamlit = "^1.22.0"
+pandas = "^2.0.1"
+numpy = "^1.24.3"
+personalissues = {path = "../personalissues"}
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
