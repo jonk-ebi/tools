@@ -13,6 +13,7 @@ streamlit = "^1.22.0"
 pandas = "^2.0.1"
 numpy = "^1.24.3"
 personalissues = {path = "../personalissues"}
+matplotlib = "^3.7.1"
 
 
 [build-system]

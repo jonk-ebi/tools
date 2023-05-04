@@ -27,12 +27,12 @@ def load_data(project):
     with open(ISSUES_FILE.format(project)) as issue_file:
         issues = json.load(issue_file)
     
-    print(f"{len(issues)} issues found")
+    print(f"{project}: {len(issues)} issues found")
     
     with open(SUMMARY_FILE.format(project)) as summary_file:
         summary = json.load(summary_file)
     
-    print(f"Summary data found for {len(summary)} people")
+    print(f"{project}: Summary data found for {len(summary)} people")
     return issues, summary
 
 def build_personal_load(project):
@@ -72,7 +72,6 @@ def build_personal_load(project):
     columns.extend(fields)
     
     df = pd.DataFrame(view, columns = columns)
-    df = df.set_index(df["Who"])
 
     return df
 
