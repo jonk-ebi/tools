@@ -10,14 +10,12 @@ DATA_FILE = "frontend-ensweb"
 ISSUES_FILE = "{}.json"
 SUMMARY_FILE = "{}_summary.json"
 
-def update_data(project):
-    config = configparser.ConfigParser()
-    config.read('settings.ini')
+def update_data(project, people, token):
 
     personal_issues(
         "https://www.ebi.ac.uk/panda/jira",
-        config['jira']['token'],
-        ["imran","andrey","jyo", "jon"],
+        token,
+        people,
         project,
         project,
         True
@@ -75,14 +73,25 @@ def build_personal_load(project):
 
     return df
 
-def build_unassigned_tickets(project):
+def build_assigned_tickets(project, person = "unassigned"):
     issues, _ = load_data(project)
     count = 0
     delta = 0
     for issue in issues:
-        if issue["person"] == "unassigned":
+        if issue["person"] == person:
             count += 1
     return count, delta
+    
+#----------------
+def build_all_assigned_tickets(person, projects):
+    count = 0
+    delta = 0
+    for project in projects:
+        c,d = build_assigned_tickets(project, person)
+        count += c
+        delta += d
+    return count, delta
+        
     
 
 #---------------

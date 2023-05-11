@@ -1,0 +1,18 @@
+[jira]
+token=???
+
+[settings]
+projects = ["ENSWEB","ENSWBSITES","ENSMVP"]
+team = ["imran","andrey","jyo", "jon"]
+
+[ENSWEB]
+name="Current Site"
+people=["imran","andrey","jyo", "jon"]
+
+[ENSWBSITES]
+name="Beta Site"
+people=["imran","andrey","jyo", "jon"]
+
+[ENSMVP]
+name="MVP"
+people=["john","jon"]

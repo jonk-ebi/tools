@@ -14,6 +14,7 @@ pandas = "^2.0.1"
 numpy = "^1.24.3"
 personalissues = {path = "../personalissues"}
 matplotlib = "^3.7.1"
+toml = "^0.10.2"
 
 
 [build-system]
