@@ -1,5 +1,6 @@
 import sys
 import os
+import re
 import json
 import csv
 import math
@@ -138,8 +139,27 @@ def generate_summary(file, flattened_issues):
     
     with open(file,"w") as report:
         report.write(json.dumps(people, indent=4))
+
+#com.atlassian.greenhopper.service.sprint.Sprint@6e5c4cef[id=4475,rapidViewId=332,state=ACTIVE,name=2023-9,startDate=2023-04-28T15:13:00.000Z,endDate=2023-05-12T15:13:00.000Z,completeDate=<null>,activatedDate=2023-04-28T15:13:58.684Z,sequence=4475,goal=Variation improvements and species stats handover,autoStartStop=false,synced=false]    
+def _last_object_with_name_as_string(list, empty="None"):
+    if not list:
+        return empty
     
+    if len(list) > 0:
+        obj = list[-1]
+        
+        if hasattr(obj, 'name'):
+            return obj.name
+        elif coded_name_match := re.search(r"(name\=)([a-zA-Z0-9\-]+)",obj): 
+            return coded_name_match.group(2)
+        return str(obj)
+    return empty
+ 
+      
 def _flatten_issue(issue, owner, jira_conn):
+    #for k in dir(issue.fields):
+    #    print(k)
+
     return {
         'person':owner, 
         'issue':issue.key,
@@ -151,6 +171,8 @@ def _flatten_issue(issue, owner, jira_conn):
                             issue.fields.comment.comments
                         ),
         'status':str(issue.fields.status),
+        'release':_last_object_with_name_as_string(issue.fields.fixVersions),
+        'sprint':_last_object_with_name_as_string(issue.fields.customfield_10235), #sprint field!!!
         'created':chop_iso_datetime(str(issue.fields.created)),
         'updated':chop_iso_datetime(str(issue.fields.updated)),
         'life': get_life_time_for_issue(issue.fields.created),
@@ -195,6 +217,5 @@ def personal_issues_cli(args):
     cli = getCLICommands().parse_args(args)
     personal_issues(cli.host, cli.token, cli.people, cli.limit, cli.output, cli.summary)
     
-
 if __name__ == "__main__": 
     personal_issues_cli(sys.argv[1:])

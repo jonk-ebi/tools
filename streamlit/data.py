@@ -88,7 +88,7 @@ def build_unassigned_tickets(project):
 #---------------
 def build_issues(project):
     issues, summary = load_data(project)
-    columns = ['issue','summary','person','status','life']
+    columns = ['issue','summary','person','release','sprint','status','life']
     
     LINK_FORMAT = "<a target=\"new\" href=\"https://www.ebi.ac.uk/panda/jira/browse/{id}\">{id}</a>"
     
