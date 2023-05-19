@@ -1,7 +1,8 @@
-from enum import Enum
-
+import os
 import json
 import configparser
+
+from enum import Enum
 
 import pandas as pd
 from datetime import datetime
@@ -11,6 +12,7 @@ from personalissues.personal_issues import personal_issues
 DATA_FILE = "frontend-ensweb"
 ISSUES_FILE = "{}.json"
 SUMMARY_FILE = "{}_summary.json"
+METRIC_FILE = "metrics.json"
 
 UNASSIGNED = "unassigned"
 
@@ -36,6 +38,8 @@ class JiraData():
         for project in projects:
             self.summary[project] = self.load_data(project,Data.Summary)
             self.issues[project] = self.load_data(project, Data.Issues)
+        
+        self._load_metrics()
 
     def update_data(self, project, people, token):
     
@@ -47,6 +51,19 @@ class JiraData():
             project,
             True
         )
+    
+    def _load_metrics(self):
+        if os.path.exists(METRIC_FILE):        
+            with open(METRIC_FILE) as metricsStream:
+                self.metrics = json.load(metricsStream)
+    
+    def _save_metrics(self):
+        with open(METRIC_FILE, "w") as metricsStream:
+            metricsStream.write(json.dumps(self.metrics, indent=4))
+            
+    def save_data(self):
+        self._save_metrics()
+            
     
     def load_data(self, project, data:Data):
         
@@ -110,6 +127,22 @@ class JiraData():
     
     #-------------
     
+    def _get_metric_delta(self, type, key, current_value ):
+        if type not in self.metrics:
+            self.metrics[type] = {}
+            
+        if key not in self.metrics[type]:
+            print("Added new")
+            self.metrics[type][key] = current_value
+            
+        delta = current_value - self.metrics[type][key]
+        if delta == 0:
+            delta = None # prevents the up zero delta
+        print(f"{type}-{key}: {delta}")
+        #self.metrics[type][key] = current_value
+        return delta
+    
+    
     def count_project_tickets_assigned_for_a_person(self, project, person=UNASSIGNED): 
         issues = self.issues[project]
         count = 0
@@ -126,11 +159,13 @@ class JiraData():
         
     def build_assigned_project_tickets(self, project, person=UNASSIGNED):
         current_count = self.count_project_tickets_assigned_for_a_person(project, person)
-        return current_count, 0
+        delta = self._get_metric_delta("project_count",project, current_count)
+        return current_count, delta
         
     def build_tickets_assigned_for_a_person(self, projects, person=UNASSIGNED):
         current_count = self.count_tickets_assigned_for_a_person(projects, person)
-        return current_count, 0
+        delta = self._get_metric_delta("person_count",person, current_count)
+        return current_count, delta
     
     #---------------
     def build_issues(self, project):

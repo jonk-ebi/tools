@@ -12,17 +12,23 @@ from data import JiraData
 # - add a new issues section to summary
 # - add a my issues tab
 # - days since assigned 
-# - delta on summary
+
 # - project specfic 
 
 def load_settings(toml_path):
+    
     with open(toml_path) as toml_stream:
         return toml.load(toml_stream)
         
 
-def update_all_projects(projct_list, team_list, token): 
+def update_all_projects(projct_list, team_list, token):
+
     for project in projct_list: 
         d.update_data(project, team_list, token)
+        
+def reset_deltas():
+    d.save_data() 
+    
         
 config = load_settings("settings.toml")
 project_list = config['settings']['projects']
@@ -38,17 +44,30 @@ st.set_page_config(page_title="Ensembl Jira Dash", page_icon=":chart_with_upward
 
 st.markdown("""
 <style>
+     div[data-testid="metric-container"]
+     {
+         height:4em;
+     }
+     
      div[data-testid="stMetricValue"]
      {
+        width:3em;
         display:inline-block; 
-        width:70%;
      }
      
      div[data-testid="stMetricDelta"]
      {
-         display:inline-block; 
-         width:30%;
+         position:relative;
+         top:-2.5em; 
+         left:3em;
      }
+     
+     div[data-testid="stMetricDelta"] div
+     {
+         display:inline
+     }
+     
+     
 </style>
 """
 ,unsafe_allow_html=True)
@@ -56,6 +75,7 @@ st.markdown("""
 #-- Build dashboard
 
 st.button("Refresh Data", on_click=update_all_projects, args=[project_list, team_list, config['jira']['token']], type="primary")
+st.button("Reset Deltas", on_click=reset_deltas, type="primary")
 
 tab_names = ["Summary"]
 tab_names.extend(project_name_list)
@@ -98,4 +118,4 @@ st.sidebar.markdown("---")
 st.sidebar.markdown("**Total Assigned Issues**")
 for person in team_list: 
     person_value, person_delta = d.build_tickets_assigned_for_a_person(project_list, person)
-    st.sidebar.metric(person, person_value, delta=person_delta, delta_color="inverse", help=None, label_visibility="visible")    
+    st.sidebar.metric(person, person_value, delta=person_delta, delta_color="inverse", help=None, label_visibility="visible")
