@@ -59,6 +59,7 @@ class JiraData():
     
     def _save_metrics(self):
         with open(METRIC_FILE, "w") as metricsStream:
+            print(self.metrics)
             metricsStream.write(json.dumps(self.metrics, indent=4))
             
     def save_data(self):
@@ -139,7 +140,7 @@ class JiraData():
         if delta == 0:
             delta = None # prevents the up zero delta
         print(f"{type}-{key}: {delta}")
-        #self.metrics[type][key] = current_value
+        self.metrics[type][key] = current_value
         return delta
     
     

@@ -25,11 +25,15 @@ def update_all_projects(projct_list, team_list, token):
 
     for project in projct_list: 
         d.update_data(project, team_list, token)
+    # Calculate metrics
+    for project in project_list:
+        d.build_assigned_project_tickets(project)
+    for person in team_list: 
+        d.build_tickets_assigned_for_a_person(project_list, person)
+    # save
+    d.save_data()
         
-def reset_deltas():
-    d.save_data() 
-    
-        
+     
 config = load_settings("settings.toml")
 project_list = config['settings']['projects']
 d = JiraData(project_list)
@@ -75,7 +79,6 @@ st.markdown("""
 #-- Build dashboard
 
 st.button("Refresh Data", on_click=update_all_projects, args=[project_list, team_list, config['jira']['token']], type="primary")
-st.button("Reset Deltas", on_click=reset_deltas, type="primary")
 
 tab_names = ["Summary"]
 tab_names.extend(project_name_list)
