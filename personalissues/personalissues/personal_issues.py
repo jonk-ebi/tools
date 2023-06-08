@@ -83,6 +83,7 @@ def clean_sprint_datetime(sprint_date):
     return datetime.fromisoformat(sprint_date[:sprint_date.rfind(".")]) # I should handle this better
     
 def get_life_time_for_issue(created_date_str): 
+    
     created_date = clean_sprint_datetime(created_date_str)
     now = datetime.today()
     return (now - created_date).days
@@ -154,11 +155,39 @@ def _last_object_with_name_as_string(list, empty="None"):
             return coded_name_match.group(2)
         return str(obj)
     return empty
- 
-      
+    
+def _get_assigned_date(issue, jira_conn):
+    issue_history = jira_conn.issue(issue.id, expand='changelog')
+    owner = str(issue.fields.assignee)
+    last_assigned = None
+    assigned_count = 0
+    for history in issue_history.changelog.histories:
+        for item in history.items:
+            low_field = item.field.lower()
+            if low_field == "assignee":
+                print(f"{owner} vs {str(item.toString)}")
+                if item.toString:
+                    assigned_count += 1
+                
+                if item.toString == owner:
+                    print(history.created)
+                    if last_assigned == None or history.created > last_assigned:
+                        last_assigned = history.created
+        
+    if last_assigned:
+        return get_life_time_for_issue(last_assigned), assigned_count
+    return get_life_time_for_issue(issue.fields.created), 1
+
+   
 def _flatten_issue(issue, owner, jira_conn):
     #for k in dir(issue.fields):
     #    print(k)
+    
+    if owner == "unassigned":
+        assigned_for = 0
+        assigned_count = 0
+    else:
+        assigned_for, assigned_count = _get_assigned_date(issue, jira_conn)
 
     return {
         'person':owner, 
@@ -176,6 +205,8 @@ def _flatten_issue(issue, owner, jira_conn):
         'created':chop_iso_datetime(str(issue.fields.created)),
         'updated':chop_iso_datetime(str(issue.fields.updated)),
         'life': get_life_time_for_issue(issue.fields.created),
+        'assigned': assigned_for,
+        'times_assigned': assigned_count,
     }
 
 def personal_issues(host, token, people, limit, output, summary): 

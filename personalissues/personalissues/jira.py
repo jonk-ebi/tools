@@ -33,6 +33,7 @@ def get_unassigned_issues(jira, projects):
 def get_issues_for_person(jira, people): 
 
     issues = {}
+    # Join together all the people into a single query, we don't need to spit by people as they get flattened
     for person in people:
         query = f"assignee = {person} AND status not in (Done, Closed, Resolved, Cancelled) order by updated DESC"
         print(f"Query: {query}")

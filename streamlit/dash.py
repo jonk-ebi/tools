@@ -11,9 +11,8 @@ from data import JiraData
 # - add project links
 # - add a new issues section to summary
 # - add a my issues tab
-# - days since assigned 
 
-# - project specfic 
+# - project specfic stats
 
 def load_settings(toml_path):
     
@@ -108,9 +107,12 @@ for x in range(0,len(project_tabs)):
     project = project_list[x]
     project_name = project_name_list[x]
     with project_tabs[x]:
-        df = d.build_issues(project)
+        df = d.build_issues(project).sort_values(by=['life'],ascending=False)
         st.write(f"{project_name} Issue board")
-        st.markdown(df.style.bar(subset=['life'], color='#d65f5f').hide(axis=0).to_html(), unsafe_allow_html=True)
+        st.markdown(df.style.bar(subset=['life'], color='#d65f5f')
+                            .bar(subset=['assigned'], color='#d65f5f')
+                            .hide(axis=0).to_html()
+                    , unsafe_allow_html=True)
     
 # Sidebar ----
 st.sidebar.markdown("**Unassigned Issues**")

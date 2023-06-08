@@ -171,7 +171,7 @@ class JiraData():
     #---------------
     def build_issues(self, project):
         issues = self.issues[project]
-        columns = ['issue','summary','person','release','sprint','status','life']
+        columns = ['issue','summary','person','release','sprint','status','life','assigned','times_assigned']
         
         LINK_FORMAT = "<a target=\"new\" href=\"https://www.ebi.ac.uk/panda/jira/browse/{id}\">{id}</a>"
         
