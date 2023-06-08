@@ -34,10 +34,25 @@ class JiraData():
         self.issues = {}
         self.metrics = {}
         self.projects = {}
+        self.has_data = False
         
+        
+        data_loaded = 0
+        data_expected = len(projects) * 2
         for project in projects:
-            self.summary[project] = self.load_data(project,Data.Summary)
-            self.issues[project] = self.load_data(project, Data.Issues)
+            
+            if summary := self.load_data(project,Data.Summary):
+                self.summary[project] = summary
+                data_loaded += 1
+            
+            if issues := self.load_data(project, Data.Issues):
+                self.issues[project] = issues
+                data_loaded += 1
+                
+        if data_expected == data_loaded:
+            self.has_data = True
+        else:
+            print(f"Failed to load required data. Got {data_loaded} Expected {data_expected}")
         
         self._load_metrics()
 
@@ -69,15 +84,21 @@ class JiraData():
     def load_data(self, project, data:Data):
         
         if data == Data.All or data == Data.Issues:
-            with open(ISSUES_FILE.format(project)) as issue_file:
-                issues = json.load(issue_file)
-            print(f"{project}: {len(issues)} issues found")
+            if os.path.exists(ISSUES_FILE.format(project)):
+                with open(ISSUES_FILE.format(project)) as issue_file:
+                    issues = json.load(issue_file)
+                print(f"{project}: {len(issues)} issues found")
+            else:
+                return None
         
         if data == Data.All or data == Data.Summary:
-            with open(SUMMARY_FILE.format(project)) as summary_file:
-                summary = json.load(summary_file)
-            
-            print(f"{project}: Summary data found for {len(summary)} people")
+            if os.path.exists(SUMMARY_FILE.format(project)):
+                with open(SUMMARY_FILE.format(project)) as summary_file:
+                    summary = json.load(summary_file)
+                
+                print(f"{project}: Summary data found for {len(summary)} people")
+            else:
+                return None
         
         if data == Data.All: 
             return issues, summary

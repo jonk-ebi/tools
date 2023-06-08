@@ -1,3 +1,4 @@
+import sys
 import toml
 
 import streamlit as st
@@ -78,6 +79,10 @@ st.markdown("""
 #-- Build dashboard
 
 st.button("Refresh Data", on_click=update_all_projects, args=[project_list, team_list, config['jira']['token']], type="primary")
+
+if not d.has_data:
+    st.markdown("## Could not find data.\nPlease refresh the data with the above button to get started")
+    sys.exit()
 
 tab_names = ["Summary"]
 tab_names.extend(project_name_list)
