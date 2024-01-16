@@ -18,7 +18,7 @@
         },
         "ves-hx2-70":{
         "service":"master",
-        "site":"-"
+        "site":""
         },
         "wp-p1m2-3[678]":{
         "service":"biomart",
@@ -28,7 +28,7 @@
         "service":"biomart-fallback",
         "site":"Vertebrate"
         },
-        "wp-p1m-62":{
+        "wp-p1m2-62":{
         "service":"biomart",
         "site":"Non-Vertebrate"
         },
@@ -43,33 +43,49 @@
         "wp-p2m-9[567]":{
         "service":"solr-fallback",
         "site":"www"
+        },
+        "wp-p3s-3[1237]":{
+            "service":"rest-fallback",
+            "site":"rest"
+        },
+        "wp-p3s-44":{
+            "service":"rest-fallback",
+            "site":"rest"
+        },
+        "ves-oy-2[45]":{
+            "service":"REST-fallback",
+            "site":"rest"
+        },
+        "wp-p1m-1b":{
+            "service":"V Archive Solr",
+            "site":"archive"
         }
     },
     "sops":{
-        "web":[
-            {"check":"ENSWEBSOPS-53"},
-            {"host-check":"ENSWEBSOPS-72"}
-        ],
-        "biomart":[
-            {"check":"ENSWEBSOPS-70"},
-            {"host-check":"ENSWEBSOPS-72"}
-        ],
-        "solr":[
-            {"check":"ENSWEBSOPS-70"},
-            {"host-check":"ENSWEBSOPS-72"}
-        ],
-        "rest":[
-            {"check":"ENSWEBSOPS-35"},
-            {"host-check":"ENSWEBSOPS-72"}
-        ],
-        "archives":[
-            {"check":"ENSWEBSOPS-70"},
-            {"host-check":"ENSWEBSOPS-72"}
-        ],
-        "rapid":[
-            {"check":"ENSWEBSOPS-53"},
-            {"host-check":"ENSWEBSOPS-72"}
-        ]
+        "web":{
+            "check":"ENSWEBSOPS-53",
+            "host-check":"ENSWEBSOPS-72"
+        },
+        "biomart":{
+            "check":"ENSWEBSOPS-70",
+            "host-check":"ENSWEBSOPS-72"
+        },
+        "solr":{
+            "check":"ENSWEBSOPS-70",
+            "host-check":"ENSWEBSOPS-72"
+        },
+        "rest":{
+            "check":"ENSWEBSOPS-35",
+            "host-check":"ENSWEBSOPS-72"
+        },
+        "archives":{
+            "check":"ENSWEBSOPS-70",
+            "host-check":"ENSWEBSOPS-72"
+        },
+        "rapid":{
+            "check":"ENSWEBSOPS-53",
+            "host-check":"ENSWEBSOPS-72"
+        }
     },
     "generic_sops":{
         "haproxy-check":"ENSWEBSOPS-112",
