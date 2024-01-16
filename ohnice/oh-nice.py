@@ -111,6 +111,8 @@ def generate_data():
     #enrich errors 
     for vm, d in report.items(): 
         service = d['info']['service']
+        if "-fallback" in service:
+            service = service.split('-')[0]
         for e in d["errors"]: 
             if service in config['sops']:
                 if e["error"] in config["sops"][service]: 
