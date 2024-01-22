@@ -18,7 +18,7 @@
         },
         "ves-hx2-70":{
         "service":"master",
-        "site":""
+        "site":"."
         },
         "wp-p1m2-3[678]":{
         "service":"biomart",

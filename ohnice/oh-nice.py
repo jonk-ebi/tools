@@ -160,13 +160,16 @@ if data[0]:
             'host':f"<a href='#{vm}'>{vm}</a>", 
             'service':d['info']['service'],
             'site':d['info']['site'],
+            '# alerts':len(d['errors']),
             'alerts':", ".join([link_if_sop(e['error'],e['sop']) for e in d['errors']])
         }
         for vm,d in report.items()
     ]
     
     df = pd.DataFrame(summary, columns = summary[0].keys())
-    st.markdown(df.style.to_html(),unsafe_allow_html=True)
+    st.markdown(df.style.hide(axis=0)
+        .bar(subset=['# alerts'], color='#FF0000')
+        .to_html(),unsafe_allow_html=True)
     
     st.markdown("## Alerts")
     
@@ -186,7 +189,7 @@ if data[0]:
                 e["sop"] = f"<a href='{JIRA}{sop}'>{sop}</a>"
         
         df = pd.DataFrame(errors, columns = details["errors"][0].keys())
-        st.markdown(df.style.to_html(), unsafe_allow_html=True)
+        st.markdown(df.style.hide(axis=0).to_html(), unsafe_allow_html=True)
         
     
     
