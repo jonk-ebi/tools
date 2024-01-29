@@ -137,6 +137,24 @@ def link_if_sop(alert, sop):
 #----------------------------------     
 #Setup streamlit
 st.set_page_config(page_title="Oh nice!", page_icon=":chart_with_upwards_trend:", layout="wide")
+st.markdown("""
+<style>
+    .data A
+    {
+        margin:0.5rem;
+        padding:0.2rem;
+        border-radius:0.5rem;
+        text-decoration:none; 
+        background-color:rgb(0, 153, 255);
+        color:#FFFFFF;  
+    }
+    
+    .data A:hover 
+    {
+        background-color:rgb(27, 44, 57);
+    }
+</style>
+""",unsafe_allow_html=True)
 
 data = generate_data()
 
@@ -186,7 +204,7 @@ if data[0]:
         for e in errors:
             sop = e['sop']
             if sop != SOP_MISSING: 
-                e["sop"] = f"<a href='{JIRA}{sop}'>{sop}</a>"
+                e["sop"] = f"<a href='{JIRA}{sop}' class='stdlink'>{sop}</a>"
         
         df = pd.DataFrame(errors, columns = details["errors"][0].keys())
         st.markdown(df.style.hide(axis=0).to_html(), unsafe_allow_html=True)
