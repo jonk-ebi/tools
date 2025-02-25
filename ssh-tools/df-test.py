@@ -32,6 +32,9 @@ def scan_hosts(hosts, targets):
     command = "df -Pkh"
 
     for host in hosts:
+        if host.startswith('#'):
+            continue
+            
         print(f"Connecting to {host}")
         ssh_command = f"ssh -o 'StrictHostKeyChecking=No' {host} '{command}'"
         process = subprocess.Popen(
@@ -53,7 +56,7 @@ if __name__ == "__main__":
         
         with open(sys.argv[1]) as host_file:
             hosts = host_file.read().splitlines()
-            print(f"Testing {len(hosts)} hosts")
+            print(f"Found {len(hosts)} lines")
             scan_hosts(hosts, targets)
     else:
         print(f"Expected: {sys.argv[0]} hosts.txt targets.json")
