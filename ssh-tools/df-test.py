@@ -1,33 +1,22 @@
 import subprocess
 import sys
+import json
 
 
-def process_output(output: str) -> None:
-
-    targets = [
-        "hh-isi-srv:/ifs/public/ro/ensweb_codon",
-        "hh-isi-srv:/ifs/public/ro/ensweb-data_codon",
-        "hh-isi-srv:/ifs/public/ro/ensweb-software_codon",
-    ]
-
-    expected = [
-        "/nfs/public/ro/ensweb",
-        "/nfs/public/ro/ensweb-data",
-        "/nfs/public/ro/ensweb-software",
-    ]
+def process_output(output: str, targets) -> None:
 
     lines = output.splitlines()
     found = 0
     possible_errors = []
     for line in lines:
         columns = [c.strip() for c in line.split(' ') if len(c) > 0]
-        for i in range(0, len(targets)):
-            if columns[0] == targets[i]:
-                if columns[-1] == expected[i]:
+        for target, expected in targets.items(): 
+            if columns[0] == target:
+                if columns[-1] == expected:
                     found += 1
                 else:
                     possible_errors.append(
-                        f"\tError: {targets[i]} -> {columns[-1]}. Expected {expected[i]}"
+                        f"\tError: {targets} -> {columns[-1]}. Expected {expected}"
                     )
     if found >= len(targets):
         print("\tLooks good")
@@ -36,10 +25,10 @@ def process_output(output: str) -> None:
             for p in possible_errors:
                 print(p)
         else:
-            print("\tNo Codon mapping found!")
+            print("\tNo mapping found!")
 
 
-def scan_hosts(hosts):
+def scan_hosts(hosts, targets):
     command = "df -Pkh"
 
     for host in hosts:
@@ -54,14 +43,20 @@ def scan_hosts(hosts):
         if error and len(error) > 0 or len(output) == 0:
             print("\tConnection error")
         else:
-            process_output(output.decode("utf-8"))
+            process_output(output.decode("utf-8"), targets)
 
 
 if __name__ == "__main__":
-    if len(sys.argv) >= 2:
+    if len(sys.argv) >= 3:
+        with open(sys.argv[2]) as targets_file:
+            targets = json.load(targets_file)
+        
         with open(sys.argv[1]) as host_file:
             hosts = host_file.read().splitlines()
             print(f"Testing {len(hosts)} hosts")
-            scan_hosts(hosts)
+            scan_hosts(hosts, targets)
     else:
-        print("Missing line delimited file of host names")
+        print(f"Expected: {sys.argv[0]} hosts.txt targets.json")
+        print("host.txt: A line delimited list of host names to check")
+        print("targets.json: A dictionary of targets and expected mapping")
+        print("""{\n\t"my-host:/my/nfs/path":"/nfs/my/mount"\n}""")

@@ -1,0 +1,3 @@
+{
+	"my-host:/my/nfs/path":"/nfs/my/mount"
+}
