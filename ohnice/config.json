@@ -59,6 +59,43 @@
         "wp-p1m-1b":{
             "service":"V Archive Solr",
             "site":"archive"
+        },
+        "wp-p2m-35":{
+            "service":"GRCh37 fallback",
+            "site":"GRCh37 web"
+        },
+        "wp-p2m-84":{
+            "service":"biomarts fallback",
+            "site":"Non-vertebrates"
+        },
+        "wp-np3-32":{
+            "service":"Main VM",
+            "site":"admin"
+        },
+        "wp-p1m2-40":{
+            "service":"Release cycle",
+            "site":"www & GRCh37 mart tests"
+        },
+        "wp-p1m2-57":{
+            "service":"Archive",
+            "site":"GRCh37 archive"
+        },
+        "wp-p2m-2f":{
+            "service":"Solr fallback",
+            "site":"GRCh37"      
+        },
+        "wp-p1m2-1f":{
+            "service":"REST archive - gone",
+            "site":"?"
+        },
+        "wp-p1m2-3f":{
+            "service":"V Archive Solr 112",
+            "site":"archive"
+        
+        },
+        "wp-p1m2-4[123456]":{
+            "service":"V",
+            "site":"REST"
         }
     },
     "sops":{
